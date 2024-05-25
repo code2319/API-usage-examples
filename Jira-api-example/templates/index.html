@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Celery Task Status</title>
+</head>
+
+<body>
+    <label for="start_date">Start Date:</label>
+    <input type="date" id="start_date" name="start_date" required><br><br>
+
+    <label for="end_date">End Date:</label>
+    <input type="date" id="end_date" name="end_date" required><br><br>
+
+    <button id="triggerButton">Run</button>
+    <div id="status"></div>
+
+    <script>
+        document.getElementById('triggerButton').addEventListener('click', function () {
+            const sd = document.getElementById('start_date').value;
+            const ed = document.getElementById('end_date').value;
+
+            fetch('/trigger-task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    start_date: sd,
+                    end_date: ed
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const taskId = data.task_id;
+                    getStatus(taskId)
+                });
+        });
+
+        function getStatus(taskId) {
+            fetch('/task-status/' + taskId)
+                .then(response => response.json())
+                .then(data => {
+                    const status = data.status;
+                    if (status == 'SUCCESS') {
+                        const result = data.result;
+                        let formattedResult = 'Task completed. Result:\n';
+                        // formattedResult = ... 
+                        document.getElementById('status').innerText = 'formattedResult'
+                    } else if (status == 'pending') {
+                        document.getElementById('status').innerText = 'Task is still pending...';
+                        setTimeout(function () {
+                            getStatus(taskId);
+                        }, 1000); // check again after 1 sec
+                    }
+                });
+        }
+    </script>
+</body>
+
+</html>
